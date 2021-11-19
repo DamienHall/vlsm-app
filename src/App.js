@@ -1,23 +1,16 @@
-import logo from './logo.svg';
+import React, { useState } from 'react';
+import { Title, Input } from './customElements';
 import './App.css';
 
 function App() {
+  const [count, setCount] = useState(0);
+  let add = () => {
+    setCount(count+1);
+  }
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
+    <div className="App Column">
+        <Title text="IP Subnet Calc"/>
+        <Input className="Input"/>
     </div>
   );
 }
