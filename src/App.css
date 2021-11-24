@@ -1,0 +1,24 @@
+.App {
+  text-align: center;
+  display: flex;
+  height: 100vh;
+}
+
+.Column {
+  flex-direction: column;
+}
+
+.Row {
+  flex-direction: row;
+}
+
+.BlockA {
+  flex: 1;
+  align-items: center;
+  background-color: purple;
+}
+
+.BlockB {
+  flex: 1;
+  background-color: pink;
+}
