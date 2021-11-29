@@ -5,14 +5,13 @@ import './App.css';
 import 'w3-css';
 
 function App() {
-  const [count, setCount] = useState(0);
-  let add = () => {
-    setCount(count+1);
-  }
+  const [text, setText] = useState('');
   return (
     <div className="w3-container w3-center">
         <Title text="IP Address"/>
         <Input className="Input"/>
+        <button style={{margin: '10px'}} className="w3-button w3-blue">{text}</button>
+        <button style={{margin: '10px'}} className="w3-button w3-blue">VLSM</button>
     </div>
   );
 }
