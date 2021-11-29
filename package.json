@@ -6,25 +6,18 @@
     "@testing-library/jest-dom": "^5.15.0",
     "@testing-library/react": "^11.2.7",
     "@testing-library/user-event": "^12.8.3",
-<<<<<<< HEAD
     "react": "^17.0.2",
     "react-dom": "^17.0.2",
     "react-scripts": "4.0.3",
-=======
     "missing": "0.0.1",
     "react": "^17.0.2",
     "react-dom": "^17.0.2",
     "react-scripts": "^4.0.3",
->>>>>>> 4b3c2dafa8d9b9c2705194cb0f7899de55bf1c1a
     "w3-css": "^4.1.0",
     "web-vitals": "^1.1.2"
   },
   "scripts": {
-<<<<<<< HEAD
     "start": "PORT=80 react-scripts start",
-=======
-    "start": "react-scripts start",
->>>>>>> 4b3c2dafa8d9b9c2705194cb0f7899de55bf1c1a
     "build": "react-scripts build",
     "test": "react-scripts test",
     "eject": "react-scripts eject"

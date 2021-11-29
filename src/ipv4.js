@@ -7,154 +7,97 @@ const TYPE = {
 }
 
 class IPv4 {
+  static hostsToPrefix(minHosts) {
+    let i = 0;
+    while ((Math.pow(2,i)-2)<minHosts) {
+      i++;
+    }
+    return 32-i;
+  }
+  static mask(ip,mask) {
+    let maskedIP = [];
+    for (let i = 0; i < 4; i++) {
+      maskedIP.push(ip[i]&mask[i]);
+    }
+    return maskedIP;
+  }
+  static prefixToSubnet(prefix) {
+    let binSubnetMask = "1".repeat(prefix)+"0".repeat(32-prefix);
+    return new Uint8Array(binSubnetMask.match(/.{1,8}/gi).map(_=>parseInt(_,2)));
+  }
   constructor(ip=null, prefix=null) {
-    this.ip = typeof ip === "string" ? new Uint8Array(ip.split(".")) : new Uint8Array(ip);
-    this.prefix = prefix;
-    this.hostBitCount = 32-this.prefix;
-    this.networkBitCount = 32-this.hostBitCount;
-  }
-  getNetworkHostData() {
-    return {
-      networkBitCount: this.networkBitCount,
-      hostBitCount: this.hostBitCount
-    }
-  }
-  getNetworkBitCount() {
-    return this.networkBitCount;
-  }
-  getHostBitCount() {
-    return this.hostBitCount;
-  }
-  getWildcard() {
-
-  }
-  getSubnetMask(format=TYPE.DEFAULT) {
-    let broadcastAddress;
-    let ip;
-    let replace;
-    switch(format) {
-      case TYPE.DEFAULT:
-        ip = this.getIP(TYPE.BINARY).replace(/\./gi,"");
-        replace = ip.slice(this.prefix).replace(/1/gi,0);
-        replace = replace.replace(replace.slice(replace.indexOf("/")),"");
-        ip = ip.substring(0,this.prefix).replace(/0/gi,1) + replace;
-        ip = ip.match(/.{1,8}/g);
-        ip = ip.map(octet=>parseInt(octet, 2));
-        ip = ip.join(".")+"/"+this.prefix;
-        return ip;
+    switch(typeof ip) {
+      case "string":
+        if (prefix) {
+          this.ip = new Uint8Array(ip.split(".").map(_=>parseInt(_)));
+          this.prefix = typeof prefix=="string"?parseInt(prefix):prefix;
+        } else {
+          if (ip.includes("/")) {
+            this.ip = new Uint8Array(ip.split("/")[0].split(".").map(_=>parseInt(_)));
+            this.prefix = parseInt(ip.split("/")[1]);
+          } else {
+            this.ip = new Uint8Array(ip.split(".").map(_=>parseInt(_)));
+            console.log("ERROR: NO PREFIX SET FOR IP "+this.ip.join("."));
+            this.prefix = 0;
+          }
+        }
         break;
-      case TYPE.UINT8ARRAY:
-        ip = this.getIP(TYPE.BINARY).replace(/\./gi,"");
-        replace = ip.slice(this.prefix).replace(/1/gi,0);
-        replace = replace.replace(replace.slice(replace.indexOf("/")),"");
-        ip = ip.substring(0,this.prefix).replace(/0/gi,1) + replace;
-        ip = ip.match(/.{1,8}/g);
-        ip = ip.map(octet=>parseInt(octet, 2));
-        ip = new Uint8Array(ip);
-        return ip;
-        break;
-      case TYPE.BINARY:
-        ip = this.getIP(TYPE.BINARY).replace(/\./gi,"");
-        replace = ip.slice(this.prefix).replace(/1/gi,0);
-        replace = replace.replace(replace.slice(replace.indexOf("/")),"");
-        ip = ip.substring(0,this.prefix).replace(/0/gi,1) + replace;
-        ip = ip.match(/.{1,8}/g);
-        ip = ip.join(".")+"/"+this.prefix;
-        return ip;
+      case "object":
+        this.ip = new Uint8Array(ip);
+        if (prefix) {
+          this.prefix = typeof prefix=="string"?parseInt(prefix):prefix;
+        } else {
+          console.log("ERROR: NO PREFIX SET FOR IP "+this.ip.join("."));
+          this.prefix = 0;
+        }
         break;
     }
   }
-  getBroadcast(format=TYPE.DEFAULT) {
-    let broadcastAddress;
-    let ip;
-    let replace;
-    switch(format) {
-      case TYPE.DEFAULT:
-        ip = this.getIP(TYPE.BINARY).replace(/\./gi,"");
-        replace = ip.slice(this.prefix).replace(/0/gi,1);
-        replace = replace.replace(replace.slice(replace.indexOf("/")),"");
-        ip = ip.substring(0,this.prefix) + replace;
-        ip = ip.match(/.{1,8}/g);
-        ip = ip.map(octet=>parseInt(octet, 2));
-        ip = ip.join(".")+"/"+this.prefix;
-        return ip;
-        break;
-      case TYPE.UINT8ARRAY:
-        ip = this.getIP(TYPE.BINARY).replace(/\./gi,"");
-        replace = ip.slice(this.prefix).replace(/0/gi,1);
-        replace = replace.replace(replace.slice(replace.indexOf("/")),"");
-        ip = ip.substring(0,this.prefix) + replace;
-        ip = ip.match(/.{1,8}/g);
-        ip = ip.map(octet=>parseInt(octet, 2));
-        ip = new Uint8Array(ip);
-        return ip;
-        break;
-      case TYPE.BINARY:
-        ip = this.getIP(TYPE.BINARY).replace(/\./gi,"");
-        replace = ip.slice(this.prefix).replace(/0/gi,1);
-        replace = replace.replace(replace.slice(replace.indexOf("/")),"");
-        ip = ip.substring(0,this.prefix) + replace;
-        ip = ip.match(/.{1,8}/g).join(".")+"/"+this.prefix;
-        return ip;
-        break;
-    }
+  getPrefix() {
+      return this.prefix;
   }
   getIP(format=TYPE.DEFAULT) {
-    let formattedIP;
     switch(format) {
-      case TYPE.DEFAULT:
-        formattedIP = this.ip.join(".")+"/"+this.prefix;
+      case 0:
+        return this.ip.join(".");
         break;
-      case TYPE.UINT8ARRAY:
-        formattedIP = this.ip;
+      case 1:
+        return this.ip;
         break;
-      case TYPE.BINARY:
-        formattedIP = [];
-        this.ip.forEach((octet, index)=>{
-          formattedIP[index] = octet.toString(2);
-          if (octet.toString(2).length < 8) {
-            let zeroStr = "";
-            for (let i = 0; i < 8-octet.toString(2).length; i++) {
-              zeroStr += "0";
-            }
-            formattedIP[index] = zeroStr + formattedIP[index];
-          }
-        });
-        formattedIP = formattedIP.join(".")+"/"+this.prefix;
+      case 2:
+        let binIP = this.ip.join(".").split(".").map(_=>("0".repeat(8)+parseInt(_).toString(2)).slice(-8));
+        return binIP.join(".");
         break;
     }
-    return formattedIP;
+      return this.ip;
+  }
+  getSubnetMask(format=TYPE.DEFAULT) {
+    let binSubnetMask = "1".repeat(this.prefix)+"0".repeat(32-this.prefix);
+    switch(format) {
+      case 0:
+        return binSubnetMask.match(/.{1,8}/gi).map(_=>parseInt(_,2)).join(".");
+        break;
+      case 1:
+        return new Uint8Array(binSubnetMask.match(/.{1,8}/gi).map(_=>parseInt(_,2)));
+        break;
+      case 2:
+        return binSubnetMask.match(/.{1,8}/gi).join(".");
+        break;
+    }
   }
   subnet(hosts) {
-    let currentIP = this.getIP(TYPE.BINARY).split("/")[0];
-    let ipArray = [];
-    for (let i = 0; i < Math.pow(2,hosts); i++) {
-      let splitIP = [];
-      splitIP[0] = currentIP.replace(/\./gi,"").substring(0,this.prefix);
-      splitIP[1] = currentIP.replace(/\./gi,"").substring(this.prefix, this.prefix+hosts);
-      splitIP[2] = currentIP.replace(/\./gi,"").substring(this.prefix+hosts, currentIP.replace(/\./gi,"").length)
-      splitIP[1] = (parseInt(splitIP[1],2)+i).toString(2);
-      let l = splitIP[1].length;
-      for (let j = 0; j < hosts-l; j++) {
-        splitIP[1] = "0"+splitIP[1];
-      }
-      splitIP = splitIP.join("");
-      splitIP = splitIP.match(/.{1,8}/g).map(_=>parseInt(_,2)).join(".");
-      ipArray[i] = new IPv4(splitIP, this.prefix+hosts);
-    }
-    return ipArray;
+    let newPrefix = IPv4.hostsToPrefix(hosts);
+    let ip = this.getIP(TYPE.UINT8ARRAY);
+    let ips = [];
+    let maskedIP = IPv4.mask(ip, IPv4.prefixToSubnet(newPrefix));
+    return parseInt("00000001",2)<<1;
   }
-  vlsm(hosts=null) {
-    if (hosts===null) {
-      return null;
-    }
-    let hostCount = hosts.length;
-    let thisIP = parseInt(this.getIP(TYPE.BINARY).replace(/\./gi,"").split("/")[0],2);
-    let bitShiftedIP = (((thisIP>>(32-this.prefix))+1)<<(32-this.prefix));
-    hosts.sort((a,b)=>b-a);
-    console.log(thisIP.toString(2));
-    console.log(((thisIP>>(32-this.prefix))).toString(2));
-    console.log((thisIP>>>2).toString(2));
-    console.log((bitShiftedIP.toString(2)));
+  vlsm(hosts) {
+
   }
 }
+
+let ip = new IPv4([10,10,10,0],24);
+console.log(ip.getIP(TYPE.BINARY));
+console.log(ip.getSubnetMask(TYPE.BINARY));
+console.log(ip.subnet(2))
